@@ -1,0 +1,41 @@
+.upload-block {
+    margin: auto;
+}
+
+.upload {
+    font-size: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 700px;
+    height: 700px;
+    outline: 2px dashed #5d5d5d;
+    outline-offset: -12px;
+    background-color: #e0f2f7;
+    font-family: 'Segoe UI';
+    color: #1f3c44;
+}
+
+.upload label:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+upload.dragover {
+    background-color: #fafafa;
+    outline-offset: -17px;
+}
+
+.upload label {
+    font-weight: bold;
+}
+
+#file-input {
+    display: none;
+}
+
+upload:-moz-drag-over {
+    background-color: #fafafa;
+    outline-offset: -17px;
+}

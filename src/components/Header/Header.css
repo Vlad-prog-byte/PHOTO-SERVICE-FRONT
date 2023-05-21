@@ -1,0 +1,21 @@
+.header {
+    height: 147px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-wrap {
+    width: 98.85px;
+    height: 98px;
+}
+
+.enter-wrap {
+    width: 37.32px;
+    height: 36px;
+    cursor: pointer;
+}
+
+.logo-image {
+    user-select: none;
+}

@@ -1,0 +1,10 @@
+.label {
+    display: flex;
+    align-items: center;
+}
+
+.register-form {
+    width: 787px;
+    margin: 0 auto;
+    padding-top: 251px;
+}

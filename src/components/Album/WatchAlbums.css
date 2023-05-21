@@ -1,0 +1,13 @@
+.WatchAlbums {
+    width: inherit;
+    height: inherit;
+    background-color: inherit;
+    overflow-y: scroll;
+}
+
+.cardFolder {
+    display: flex;
+    /*justify-content: center;*/
+    align-items: center;
+    flex-direction: column;
+}
