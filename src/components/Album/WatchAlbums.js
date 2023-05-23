@@ -14,12 +14,33 @@ import {
 } from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {DELETE_FOLDER, RENAME_FOLDER} from "../../Storage/Actions/action";
+import axios from "axios";
 //max size childrensdsdgsdfsdfd - 20  символов
 
 
 const WatchAlbums = () => {
+
+    useEffect(() => {
+        // Get Albums /operations/albums
+        let config = {
+            headers: {
+                Authorization: "Bearer " +  localStorage.get('token')
+            }
+        };
+        axios.get('/operations/albums', config)
+            .then(res => res.json())
+            .then(
+                (result) => {
+                    dispatch({type: 'CHANNEL', payload: result})
+                },
+                (error) => {
+                    console.log(error);
+                }
+            )
+    }, [])
+
     const navigate = useNavigate();
     const store = useSelector((state) => state);
     const dispatch = useDispatch();
