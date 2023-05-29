@@ -4,8 +4,12 @@ import LoginIcon from '@mui/icons-material/Login';
 import {useNavigate} from "react-router-dom";
 import {useState} from "react";
 import axios from "axios";
+import {useDispatch, useSelector} from "react-redux";
+import {authActions} from "../../Storage/serviceSlice";
 
 const Login = () => {
+    const dispatch = useDispatch();
+    const auth = useSelector(state => state.auth);
     const navigate = useNavigate();
     const [login, setLogin] = useState(() => {
         return {
@@ -25,24 +29,36 @@ const Login = () => {
     }
 
     const handleClick = (event) => {
-        if (login.name == "" || login.email == "" || login.password == "") {
+        if (login.username == "" || login.password == "") {
             return;
         }
         else {
-            // /auth/jwt/login
-            axios.post("/auth/jwt/login", login)
-                .then(response => {
-                    localStorage.setItem('token', response.data.token);
-                    navigate('/albums');
-                })
-                .catch(error => {
-                    alert(error);
-                });
+                const requestOptions = {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: JSON.stringify(
+                        `grant_type=&username=${login.username}&password=${login.password}&scope=&client_id=&client_secret=`
+                    ),
+                };
+
+                fetch("/auth/jwt/login", requestOptions)
+                    .then(res => {
+                        if (res.status >= 200 && res.status < 300) {
+                            dispatch(authActions.login({flag: true}));
+                            navigate('/albums/')
+                        } else {
+                            setLogin( {
+                                username: "",
+                                password: "",
+                            })
+                            alert("Неверные данные");
+                        }
+                    });
         }
     }
 
     return (
-        <form action="#" className="register-form">
+        <form action="#" className="register-form" name="register">
             <div style={{marginBottom: "16px"}}>
                 <Typography variant="p" sx={{ fontSize: 34, pl: "130px", mb: '116px'}}>Вход</Typography>
             </div>
@@ -56,7 +72,9 @@ const Login = () => {
                     <InputBase
                         sx={{ ml: 1, flex: 1 }}
                         placeholder="Введите имя"
+                        name="username"
                         onChange={handleChange}
+                        value={login.username}
                     />
                 </Paper>
             </div>
@@ -71,7 +89,9 @@ const Login = () => {
                         sx={{ ml: 1, flex: 1 }}
                         placeholder="Введите пароль"
                         type="password"
+                        name="password"
                         onChange={handleChange}
+                        value={login.password}
                     />
                 </Paper>
             </div>

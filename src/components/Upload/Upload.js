@@ -42,7 +42,6 @@ const Upload = () => {
     function dropHandler(event) {
         event.preventDefault();
         let files = [...event.dataTransfer.files];
-        console.log(files);
         let imageFiles = [];
         for (let i = 0; i < files.length; i++) {
             let reg = /image/g;
@@ -63,7 +62,6 @@ const Upload = () => {
     }
 
     const clickHandler = event => {
-        console.log(filesSend);
         setLoading(true);
         let promise = new Promise((resolve, reject) => {
             setTimeout( () => {

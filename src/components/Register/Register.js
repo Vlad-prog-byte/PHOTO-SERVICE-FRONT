@@ -4,8 +4,12 @@ import './Register.css'
 import {useState} from "react";
 import axios from "axios";
 import {useNavigate} from "react-router-dom";
+import {authActions} from "../../Storage/serviceSlice";
+import {useDispatch} from "react-redux";
+
 const Register = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [register, setRegister] = useState(() => {
         return {
             username: "",
@@ -15,28 +19,56 @@ const Register = () => {
     })
 
     const handleChange = (event) => {
-        event.persist()
+        event.persist();
         setRegister(prev => {
             return {
                 ...prev,
                 [event.target.name]: event.target.value,
             }
-        })
+        });
     }
 
     const handleClick = (event) => {
         if (register.name == "" || register.email == "" || register.password == "")
             return;
         else {
-            // /auth/register
-            axios.post("/auth/register", register)
-                .then(response => {
-                    localStorage.setItem('token', response.data.token);
-                    navigate('/albums');
-                })
-                .catch(error => {
-                alert(error);
-                });
+            const body = register;
+            axios.post(
+                '/auth/register',
+                body,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+            )
+            .then((response) => {
+                if (response.status >= 200 && response.status < 300) {
+                    const requestOptions = {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: JSON.stringify(
+                            `grant_type=&username=${register.username}&password=${register.password}&scope=&client_id=&client_secret=`
+                        ),
+                    };
+
+                    fetch("/auth/jwt/login", requestOptions)
+                     .then(res => {
+                        if (res.status >= 200 && res.status < 300) {
+                            dispatch(authActions.login({flag: true}));
+                            navigate('/albums/')
+                        }
+                     });
+                }
+                else {
+                    setRegister({
+                        username: "",
+                        email: "",
+                        password: "",
+                    });
+                    alert('Такой пользователь уже существует');
+                }
+            })
         }
     }
     return (
@@ -56,6 +88,7 @@ const Register = () => {
                         placeholder="Введите имя"
                         name="username"
                         onChange={handleChange}
+                        value={register.username}
                     />
                     </Paper>
             </div>
@@ -72,6 +105,7 @@ const Register = () => {
                         type="password"
                         name="password"
                         onChange={handleChange}
+                        value = {register.password}
                     />
                     </Paper>
             </div>
@@ -87,6 +121,7 @@ const Register = () => {
                         placeholder="Введите Почту"
                         name="email"
                         onChange={handleChange}
+                        value = {register.email}
                     />
                     </Paper>
             </div>

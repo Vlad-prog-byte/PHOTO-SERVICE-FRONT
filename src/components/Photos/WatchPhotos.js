@@ -13,19 +13,11 @@ import {
     TextField,
     Typography
 } from "@mui/material";
-// import {useParams} from "react-router-dom";
-import {
-    DELETE_FOLDER,
-    DELETE_PHOTO,
-    RENAME_FOLDER,
-    RENAME_PHOTO,
-    TRANSFORM_FOTO,
-    VIEW_PHOTO
-} from "../../Storage/Actions/action";
 import {useDispatch, useSelector} from "react-redux";
 import {useLocation} from "react-router-dom";
 import FolderIcon from "@mui/icons-material/Folder";
 import ReactDOM from 'react-dom';
+import {serviceActions} from "../../Storage/serviceSlice";
 
 
 
@@ -36,7 +28,7 @@ const WatchPhotos = () => {
 
 
     const [idPhoto, setIdPhoto] = useState(null);
-    const store = useSelector(state => state);
+    const store = useSelector(state => state.service);
 
 
     //Переименовать фотографию
@@ -66,11 +58,43 @@ const WatchPhotos = () => {
         const location = useLocation();
         return location.pathname;
     }
-    let id_folder = Number((usePathname().split('/'))[2]);
+    let id_folder = (usePathname().split('/')[2]);
 
+    const getPhotos = async () => {
+        let folder = store.folders.filter(value => value.id == id_folder)[0];
+        const requestOptions = {
+            method: "GET",
+            headers: {"accept": "application/json"},
+        };
+        const response = await fetch("/operations/photoes?"  + new URLSearchParams( {
+            uuid_album: folder.uuid
+        }), requestOptions);
+        const photos = await response.json();
+        console.log("fedya ne prav", photos);
+        dispatch(serviceActions.getPhotos({photos: photos, id: id_folder}));
+    }
+
+    useEffect(() => {
+        getPhotos()
+    }, []);
+
+
+    const removePhoto = async (uuid_photo) => {
+        const requestOptions = {
+            method: "POST",
+            headers: {"accept": "application/json"},
+        };
+        const response = await fetch("/operations/remove_photo?"  + new URLSearchParams( {
+            uuid_photo: uuid_photo
+        }), requestOptions);
+        const photos = await response.json();
+        dispatch(serviceActions.deletePhotos({id_folder : id_folder, uuid: uuid_photo}));
+    }
 
     const handleRemove = (event) => {
-        dispatch({type: DELETE_PHOTO, payload: {id_folder : id_folder, id_photo: idPhoto}});
+        let folder = store.folders.filter(value => value.id == id_folder)[0];
+        let photo = folder.photos.filter(photo => photo.id == idPhoto)[0];
+        removePhoto(photo.uuid);
         setContextMenu(null);
         setIdPhoto(null);
     }
@@ -91,34 +115,35 @@ const WatchPhotos = () => {
     };
 
 
-    const handleRenamePhoto = (event) => {
-        if (renamePhoto == "")
-            return;
-        setOpen(false);
-        dispatch({type: RENAME_PHOTO, payload: {id_folder: id_folder, name: renamePhoto, id_photo: idPhoto}});
-    };
+    // const handleRenamePhoto = (event) => {
+    //     if (renamePhoto == "")
+    //         return;
+    //     setOpen(false);
+    //     dispatch({type: RENAME_PHOTO, payload: {id_folder: id_folder, name: renamePhoto, id_photo: idPhoto}});
+    // };
 
     const handleChange = (event) => {
         setRenamePhoto(event.target.value);
     }
 
     const handleClick = (event) => {
-        console.log("qwefre");
         const folder = store.folders.filter(folder => folder.id == id_folder)[0];
         const photo = folder.photos.filter(photo => photo.id == event.currentTarget.id)[0];
         setName(photo.name);
-        const reader = new FileReader();
-        reader.readAsDataURL(photo.file);
-        reader.onload = (event) => {
-            setImage(event.target.result);
-            setOpenImage(true);
-        }
+        setImage(photo.url);
+        setOpenImage(true);
+        // const reader = new FileReader();
+        // reader.readAsDataURL(photo.file);
+        // reader.onload = (event) => {
+        //     setImage(event.target.result);
+        //     setOpenImage(true);
+        // }
     }
 
 
     function renderPhotos(store, id_folder) {
         let folder = store.folders.filter(value => value.id == id_folder)[0];
-        if (folder.length == 0) {
+        if (folder.length == 0 || folder.photos.length == 0) {
             return null;
         }
 
@@ -152,7 +177,9 @@ const WatchPhotos = () => {
 
     return (
         <div className="Photos">
-            <Typography variant="h3" sx={{pl: "20px", pt: "20px"}}>{store.folders.filter(value => value.id == id_folder)[0].name}</Typography>
+            <Typography variant="h3" sx={{pl: "20px", pt: "20px"}}>
+                {store.folders.filter(value => value.id == id_folder)[0].name}
+            </Typography>
             <Grid container
                   columnSpacing={1}
                   rowSpacing={3}
@@ -176,29 +203,29 @@ const WatchPhotos = () => {
                 </Menu>
             </Grid>
 
-            <div className="RenamePhoto">
-                <Dialog open={open} onClose={handleCloseRename}>
-                    <DialogTitle sx={{textAlign: 'center'}}>Переименовать фотографию</DialogTitle>
-                    <DialogContent>
-                        <InsertPhotoIcon sx={{height: "130px", width: "130px", color: "blue", mx: "auto"}}></InsertPhotoIcon>
-                        <TextField
-                            className="createfolder"
-                            autoFocus
-                            margin="dense"
-                            id="name"
-                            label="Переименовать фотогфию"
-                            type="text"
-                            fullWidth
-                            variant="standard"
-                            onChange={handleChange}
-                        />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleCloseRename}>Отменить</Button>
-                        <Button onClick={handleRenamePhoto}>Переименовать фотографию</Button>
-                    </DialogActions>
-                </Dialog>
-            </div>
+            {/*<div className="RenamePhoto">*/}
+            {/*    <Dialog open={open} onClose={handleCloseRename}>*/}
+            {/*        <DialogTitle sx={{textAlign: 'center'}}>Переименовать фотографию</DialogTitle>*/}
+            {/*        <DialogContent>*/}
+            {/*            <InsertPhotoIcon sx={{height: "130px", width: "130px", color: "blue", mx: "auto"}}></InsertPhotoIcon>*/}
+            {/*            <TextField*/}
+            {/*                className="createfolder"*/}
+            {/*                autoFocus*/}
+            {/*                margin="dense"*/}
+            {/*                id="name"*/}
+            {/*                label="Переименовать фотогфию"*/}
+            {/*                type="text"*/}
+            {/*                fullWidth*/}
+            {/*                variant="standard"*/}
+            {/*                onChange={handleChange}*/}
+            {/*            />*/}
+            {/*        </DialogContent>*/}
+            {/*        <DialogActions>*/}
+            {/*            <Button onClick={handleCloseRename}>Отменить</Button>*/}
+            {/*            <Button onClick={handleRenamePhoto}>Переименовать фотографию</Button>*/}
+            {/*        </DialogActions>*/}
+            {/*    </Dialog>*/}
+            {/*</div>*/}
 
                 <Dialog
                     fullWidth={ true }

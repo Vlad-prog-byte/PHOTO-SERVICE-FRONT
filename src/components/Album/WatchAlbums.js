@@ -15,41 +15,38 @@ import {
 import {useNavigate} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
 import {useEffect, useState} from "react";
-import {DELETE_FOLDER, RENAME_FOLDER} from "../../Storage/Actions/action";
 import axios from "axios";
+import {serviceActions} from "../../Storage/serviceSlice";
 //max size childrensdsdgsdfsdfd - 20  символов
 
 
 const WatchAlbums = () => {
-
-    useEffect(() => {
-        // Get Albums /operations/albums
-        let config = {
-            headers: {
-                Authorization: "Bearer " +  localStorage.get('token')
-            }
-        };
-        axios.get('/operations/albums', config)
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    dispatch({type: 'CHANNEL', payload: result})
-                },
-                (error) => {
-                    console.log(error);
-                }
-            )
-    }, [])
-
     const navigate = useNavigate();
-    const store = useSelector((state) => state);
+    const store = useSelector(state => state.service);
     const dispatch = useDispatch();
+
 
     const [contextMenu, setContextMenu] = useState(null);
     const [idFolder, setIdFolder] = useState(null)
 
     const [open, setOpen] = useState(false);
     const [renameFolder, setRenameFolder] = useState("");
+    const fetchData = async () => {
+            const requestOptions = {
+                method: "GET",
+                headers: {"accept": "application/json"},
+            };
+            const response = await fetch("/operations/albums", requestOptions)
+            const folders = await response.json();
+            dispatch(serviceActions.getFolders({folders: folders}));
+        }
+    useEffect(() => {
+        console.log("get folders");
+            fetchData();
+        }, []);
+
+
+
 
     const handleCloseRename = () => {
         setOpen(false);
@@ -59,21 +56,38 @@ const WatchAlbums = () => {
     const handleChange = (event) => {
         setRenameFolder(event.target.value);
     }
-    const handleRemove = (event) => {
+
+    const removeAlbum = () => {
         setContextMenu(null);
-        dispatch({type: DELETE_FOLDER, payload: {id : idFolder}});
+        const requestOptions = {
+            method: "POST",
+            headers: { "accept": "application/json" },
+        };
+
+        let uuid = store.folders.filter(value => value.id == idFolder)[0].uuid;
+        fetch("/operations/remove_album?" + new URLSearchParams( {
+            uuid_album: uuid
+        }), requestOptions)
+        .then(response => {
+                if (response.ok)
+                    dispatch(serviceActions.removeFolder({id : idFolder}));
+            })
+    }
+    const handleRemove = (event) => {
+        removeAlbum();
     }
     const handleRename = (event) => {
         setContextMenu(null);
         setOpen(true);
     };
 
-    const handleRenameFolder = (event) => {
-        if (renameFolder == "")
-            return;
-        setOpen(false);
-        dispatch({type: RENAME_FOLDER, payload: {id: idFolder, name: renameFolder}});
-    };
+    // const handleRenameFolder = (event) => {
+    //     if (renameFolder == "")
+    //         return;
+    //     setOpen(false);
+    //     dispatch({type: RENAME_FOLDER, payload: {id: idFolder, name: renameFolder}});
+    // };
+
     const handleClose = () => {
         setContextMenu(null);
     };
@@ -99,7 +113,7 @@ const WatchAlbums = () => {
             <Grid container
                   spacing={4}
             >
-                {store.folders.map(item =>
+                {store.folders ? store.folders.map(item =>
                     <Grid item>
                         <Box p={4}>
                         <div className="cardFolder">
@@ -114,6 +128,7 @@ const WatchAlbums = () => {
                         </div>
                         </Box>
                     </Grid>)
+                    : null
                 }
             </Grid>
             <Menu
@@ -130,29 +145,29 @@ const WatchAlbums = () => {
                 {/*<MenuItem sx={{fontSize: "20px"}} onClick={handleRename}>Переименовать</MenuItem>*/}
             </Menu>
 
-            <div className="RenameFolder">
-                <Dialog open={open} onClose={handleCloseRename}>
-                    <DialogTitle sx={{textAlign: 'center'}}>Переименовать Папку</DialogTitle>
-                    <DialogContent>
-                        <FolderIcon sx={{height: "130px", width: "130px", color: "blue", mx: "auto"}}></FolderIcon>
-                        <TextField
-                            className="createfolder"
-                            autoFocus
-                            margin="dense"
-                            id="name"
-                            label="Переименовать папку"
-                            type="text"
-                            fullWidth
-                            variant="standard"
-                            onChange={handleChange}
-                        />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleCloseRename}>Отменить</Button>
-                        <Button onClick={handleRenameFolder}>Переименовать папку</Button>
-                    </DialogActions>
-                </Dialog>
-            </div>
+            {/*<div className="RenameFolder">*/}
+            {/*    <Dialog open={open} onClose={handleCloseRename}>*/}
+            {/*        <DialogTitle sx={{textAlign: 'center'}}>Переименовать Папку</DialogTitle>*/}
+            {/*        <DialogContent>*/}
+            {/*            <FolderIcon sx={{height: "130px", width: "130px", color: "blue", mx: "auto"}}></FolderIcon>*/}
+            {/*            <TextField*/}
+            {/*                className="createfolder"*/}
+            {/*                autoFocus*/}
+            {/*                margin="dense"*/}
+            {/*                id="name"*/}
+            {/*                label="Переименовать папку"*/}
+            {/*                type="text"*/}
+            {/*                fullWidth*/}
+            {/*                variant="standard"*/}
+            {/*                onChange={handleChange}*/}
+            {/*            />*/}
+            {/*        </DialogContent>*/}
+            {/*        <DialogActions>*/}
+            {/*            <Button onClick={handleCloseRename}>Отменить</Button>*/}
+            {/*            /!*<Button onClick={handleRenameFolder}>Переименовать папку</Button>*!/*/}
+            {/*        </DialogActions>*/}
+            {/*    </Dialog>*/}
+            {/*</div>*/}
         </div>
     )
 

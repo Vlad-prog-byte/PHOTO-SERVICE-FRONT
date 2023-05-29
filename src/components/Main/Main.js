@@ -17,7 +17,7 @@ const Main = () => {
                      <Route path='/' element={<Register />} />
                      <Route path="/login" element={<Login />} />
                      <Route path="/albums" element={<WatchAlbums />} />
-                     <Route path="/upload" element={<Upload/>} />
+                     {/*<Route path="/upload" element={<Upload/>} />*/}
                      <Route path="/albums/:id/" element={<WatchPhotos/>}/>
                  </Routes>
              </div>
